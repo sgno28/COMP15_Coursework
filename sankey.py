@@ -1,7 +1,6 @@
 
 """Draw a sankey diagram using data from a given input file.
 """
-from fileinput import filename
 import sys
 from ezgraphics import GraphicsWindow
 
@@ -33,7 +32,6 @@ def read_file(file_name):
     """
     try:
         with open(file_name, "r",) as file:
-            line_count = 0
             data = [] #store the data
             title = file.readline().rstrip() #gets title
             source_label = file.readline().rstrip()#gets source_label
@@ -87,9 +85,27 @@ def process_data(data_list) :
     Returns:
         dictionary: contains data about the flows
     """
-    list_dict = {data_list[i]: data_list[i+1] for i in range(0, data_list, 2)}
-    print(list_dict)
-    return list_dict         
+    list_dict = {} #create empty dict to fill in
+    flag = False #flag to make sure that the returned dict actually has a correctly formated key and value 
+    for i in data_list:
+        try: #check if the input from the list is a string
+            k, v = i.split(",") #split the single string in the list containing the key and value
+            if k != None and v != None: #validating neither the key nor value are empty
+                k, v = k.strip(), v.strip() #clean up the strings from white space and new lines
+                try: #values can be converted to float
+                    v = float(v)
+                    list_dict.update({k: v}) #add to the dictionary
+                    flag = True
+                except ValueError:
+                    print(f"Value Error: Value provided is not a number {v}")
+            else:
+                raise ValueError
+        except AttributeError:
+            print("Attribute Error: Key and Value not added")
+    if flag == True:        
+        return list_dict
+    else:
+        return ValueError         
 
 def draw_sankey(window, title, data_dic, gap_size = 100, border_size = 100):
     """Draw the sankey diagram
