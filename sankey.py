@@ -32,7 +32,6 @@ def read_file(file_name):
             data = [] #store the data
             title = file.readline().rstrip() #gets title
             source_label = file.readline().rstrip()#gets source_label
-            print("Title: ", title,"label: ", source_label)
             for line in file:
                 line.split() #split up each line containing data into seperate strings
                 line.rstrip() #remove whitespace
