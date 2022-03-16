@@ -1,5 +1,6 @@
 
 """Draw a sankey diagram using data from a given input file.
+    Student Number: 
 """
 import sys
 from ezgraphics import GraphicsWindow
@@ -66,7 +67,12 @@ def parse_value (str, line_number) :
     Returns:
         float: The number read        
     """
-    pass
+    try: #values can be converted to float
+        str = float(str)
+        return str
+    except ValueError:
+        print(f"Value Error: Value provided is not a number {str}\nLine: {line_number} is not valid.")
+        raise ValueError
 
 def process_data(data_list) :
     """Returns a dictionary produced by processing the data in the list. 
@@ -84,12 +90,9 @@ def process_data(data_list) :
             k, v = i.split(",") #split the single string in the list containing the key and value
             if k != None and v != None: #validating neither the key nor value are empty
                 k, v = k.strip(), v.strip() #clean up the strings from white space and new lines
-                try: #values can be converted to float
-                    v = float(v)
-                    list_dict.update({k: v}) #add to the dictionary
-                    flag = True
-                except ValueError:
-                    print(f"Value Error: Value provided is not a number {v}")
+                v = parse_value(v, i)
+                list_dict.update({k: v}) #add to the dictionary
+                flag = True
             else:
                 raise ValueError
         except AttributeError:
@@ -100,16 +103,49 @@ def process_data(data_list) :
         return ValueError         
 
 def get_colour(c):
+    """Retreives the the colour RGB from the gloab COLOURS list
+    Args: 
+        c (int): A number representing the index for the global list COLOURS that will be assessed
+    Returns:
+        3 integer values representing the amount of red, green and blue needed for that colour
+    """
     return COLOURS[c][0], COLOURS[c][1], COLOURS[c][2]
 
-def draw_source(canvas, title, s_start, s_width, s_height, border_size = 100):
+def draw_source(canvas, title, ppf, df, border = 100):
+    """Caclulate source and draw the source block for the diagram.
+    Args:
+        canvas (Object from Ezgraphics module): contains the object instance that holds the graph
+        title (string): contains the label to overlay on the source block
+        ppf (int): the number of pixels per data flow
+        df (int): the amount of data into each flow 
+        border_size (int): the amount of pixels for the borders or margins of the window set default to 100
+    Returns:
+        start (int) the starting x coordinate for the source block
+        low (int) the lowest y coordinate of the s block 
+    """
+    width = ppf * df
+    start = (WIDTH/2)-(width/2)
+    height = 50
+    low = border + height
     canvas.setFill(0,0,0)
-    canvas.drawRectangle(s_start, border_size, s_width, s_height) #draw the source rectangle
+    canvas.drawRectangle(start, border, width, height) #draw the source rectangle
     canvas.setTextAnchor("center")
     canvas.setColor(255, 255, 255)
     canvas.drawText((WIDTH / 2), 125, title)
+    return start, low
     
 def colour_grad(canvas, s_start, n, s_low, pixel, r , g, b):
+    """Contsruct the colour gradient for the connectors from source to destination
+    Args:
+        canvas (Object from Ezgraphics module): contains the object instance that holds the graph
+        s_start (int): starting x coordinate for the source
+        n (int): the starting x coordinate for each destination
+        s_low (int): the Y coordinate representing the bottom of the source block
+        pixel (int): width of each destination
+        r (int): A number representing the amount of red
+        g (int): A number representing the amount of green
+        b (int): A number representing the amount of blue
+    """
     x = s_start #x corrdinate initially for the lines
     h = (HEIGHT - 150) - s_low #height between the source low and destination high
     shift = n - s_start  #difference between the x cordinate of the destination and source block
@@ -124,11 +160,13 @@ def colour_grad(canvas, s_start, n, s_low, pixel, r , g, b):
 def draw_dest(canvas, key, pixel, n, start, low, c):
     """Draw the shapes in the diagram such as the destination and connectors
     Args:
-        window (GraphicsWindow): contains the graph
-        title (string): contains the label to overlay on the source arrow
-        data_dic (dictionary): contains the data for the graph
-        gap_size (int): number of pixels to leave between destination arrows
-        border_size (int): Minimum separation to othe edges of the window
+        Canvas (Object from Ezgraphics module): contains the object instance that holds the graph
+        key (string): contains the label of the destinations
+        pixel (int): width of each destination
+        n (int): the starting x coordinate for each destination
+        start (int): starting x coordinate for the source
+        low (int): the Y coordinate representing the bottom of the source block
+        c (int): A number representing the index for the global list COLOURS that will be assessed
     """
     r, g, b = get_colour(c)
     canvas.setColor(0, 0, 0)
@@ -155,12 +193,8 @@ def draw_sankey(window, title, data_dic, gap_size = 100, border_size = 100):
     data_flow = sum(data_dic.values()) #values sumd
     diagram_width = 1000 - (2*100) - ((len(data_dic) - 1)*gap_size) #total available width to use
     ppf = diagram_width / data_flow #pixels per flow
-    s_width = ppf * data_flow
-    s_start = (WIDTH/2)-(s_width/2)
-    s_height = 50
-    s_low = border_size + s_height
     canvas = window.canvas() #start drawing
-    draw_source(canvas, title, s_start, s_width, s_height, border_size) #contructs the source block
+    s_start, s_low = draw_source(canvas, title, ppf, data_flow, border_size) #contructs the source block
     iteration = 0 #keep track of how many destinations have been plotted to get their color
     for key in data_dic:
         p_data = data_dic[key] * ppf # calculates the pixel width for each destination
@@ -212,7 +246,6 @@ def main():
     draw_sankey(win, left_axis_label, data_dic, GAP, 100)
 
     win.wait()
-
 
 if __name__ == "__main__":
     main()
