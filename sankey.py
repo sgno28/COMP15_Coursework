@@ -1,6 +1,6 @@
 
 """Draw a sankey diagram using data from a given input file.
-    Student Number: 
+    Student Number: 20058670
 """
 import sys
 from ezgraphics import GraphicsWindow
