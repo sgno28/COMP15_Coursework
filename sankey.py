@@ -1,6 +1,7 @@
 
 """Draw a sankey diagram using data from a given input file.
     Student Number: 20058670
+    comment: the inital line: "#!/usr/bin/env python3" was removed as it caused my program to crash. Please reinsert it if you can not run program. 
 """
 import sys
 from ezgraphics import GraphicsWindow
